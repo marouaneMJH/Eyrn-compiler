@@ -12,6 +12,8 @@ typedef enum TokenTyped
     WRITE,
     ID,
     INT_LITERAL,
+    CURLY_BRACE_OPEN,
+    CURLY_BRACE_CLOSE,
     SCAN_OF,
     PLUS_OP,
     MINUS_OP,

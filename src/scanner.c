@@ -23,8 +23,9 @@ int err_char = 0;
 void lexical_error(char errorStr[], int errorLine)
 
 {
-    printf(FG_RED "[SyntaxError]: " RESET " Lexical Error with" FG_RED "%s" RESET " on the line N*" FG_GREEN "%d\n" RESET,
-           errorStr, errorLine);
+    printf(FG_RED "[SyntaxError]: " FG_MAGENTA " % s " RESET " line N * " FG_GREEN " % d\n " RESET,
+           errorStr,
+           errorLine);
 }
 
 void clear_buffer(void)
@@ -66,6 +67,7 @@ Token check_reserved(char *token)
 
 // return single token
 Token scanner(FILE *file)
+
 {
     int in_char,
         c;
@@ -79,15 +81,24 @@ Token scanner(FILE *file)
     while ((in_char = getc(file)) != EOF)
     {
         if (isspace(in_char))
+        {
+
+            if (in_char == '\n')
+            {
+                ++line_n;
+                return scanner(file);
+            }
             continue; /* skip whitespace */
+        }
 
         else if (isalpha(in_char))
         {
+
             /* identifier: ID ::= LETTER (LETTER | DIGIT | '_')* */
             buffer_char(in_char);
             for (c = getc(file); isalnum(c) || c == '_'; c = getc(file))
                 buffer_char(c);
-            ungetc(c, stdin);
+            ungetc(c, file);
             return check_reserved(token_buffer);
         }
         else if (isdigit(in_char))
@@ -96,15 +107,10 @@ Token scanner(FILE *file)
             buffer_char(in_char);
             for (c = getc(file); isdigit(c); c = getc(file))
                 buffer_char(c);
-            ungetc(c, stdin);
+            ungetc(c, file);
             return INT_LITERAL;
         }
-        else if (in_char == '\n')
-        {
-            ++line_n;
 
-            return scanner(file);
-        }
         else if (in_char == '(')
         {
             return L_PAREN;
@@ -138,33 +144,45 @@ Token scanner(FILE *file)
                 return ASSIGN_OP;
             else
             {
-                ungetc(c, stdin);
-                lexical_error("Maybe u meant \':=\' instead of \':\'?", line_n);
+                ungetc(c, file);
+                lexical_error("maybe u meant \':=\' instead of \':\'?", line_n);
             }
         }
         else if (in_char == '{')
         {
             /* comment start: skip until '}' */
+            fpos_t pos;
+            fgetpos(file, &pos); // save the position
 
-            // Save the old postion of the cursor
-            long cursor_pos = ftell(file);
+            c = getc(file);
+            if (c == EOF)
+            {
+                lexical_error("'{\' missing  '}'", line_n);
+                return SCANEOF;
+            }
 
+            // keep reading until we find '}'
+            while (c != '}' && c != EOF)
             {
                 c = getc(file);
-
-                if (c == EOF)
-                {
-                    lexical_error("\'{\' missing  \'}\'", line_n);
-                    return SCANEOF;
-                }
             }
-            while (c != '}')
-                ;
 
-            // Reset the cursor position to the old position
-            fseek(file, -cursor_pos, SEEK_CUR);
+            if (c == EOF)
+            {
+                lexical_error("'{\' missing  '}'", line_n);
+                return SCANEOF;
+            }
+
+            return CURLY_BRACE_OPEN;
+
+            // Reset the cursor position
+            fsetpos(file, &pos);
         }
-
+        //  todo: notie the case of single '}` error
+        else if (in_char == '}')
+        {
+            return CURLY_BRACE_CLOSE;
+        }
         // comment ignoring
         else if (in_char == '/')
         {
