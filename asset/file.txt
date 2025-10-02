@@ -1,0 +1,7 @@
+BEGIN
+name := 5;
+name : 5;
+name : 5;
+name : 5;
+
+END

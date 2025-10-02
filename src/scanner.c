@@ -1,53 +1,80 @@
 #include <stdio.h>
 
+#include <stdlib.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
-
-extern char token_buffer[];
-
-typedef enum TokenTyped
-{
-
-    BEGIN,
-    END,
-    READ,
-    WRITE,
-    ID,
-    INT_LITERAL,
-    SCAN_OF,
-    PLUS_OP,
-    MINUS_OP,
-    SCANEOF,
-    L_PAREN,
-    R_PAREN,
-    SEMICOLON,
-    COMMA,
-    ASSIGN_OP,
-} Token;
-
 #include <stdio.h>
 #include <ctype.h>
 
-/* Function prototypes */
-void clear_buffer(void);
-void buffer_char(int c);
-int check_reserved(void);
-void lexical_error(int c);
+#include "scanner.h"
+
+char token_buffer[MAX_LEXEME_LEN];
+
+// /* Function prototypes */
+
+int buf_index = 0;
+int line_n = 1;
+int err_char = 0;
 
 // todo:
 // bool check_comment(FILE *file);
 // bool handle_comment(FILE *file);
+void lexical_error(char errorStr[], int errorLine)
+
+{
+    printf(FG_RED "[SyntaxError]: " RESET " Lexical Error with" FG_RED "%s" RESET " on the line N*" FG_GREEN "%d\n" RESET,
+           errorStr, errorLine);
+}
+
+void clear_buffer(void)
+{
+    for (int i = 0; i < MAX_LEXEME_LEN; i++)
+        token_buffer[i] = '\0';
+
+    buf_index = 0;
+}
+
+void buffer_char(int c)
+{
+    if (buf_index < MAX_LEXEME_LEN - 1)
+    {
+        token_buffer[buf_index++] = (char)c;
+        token_buffer[buf_index] = '\0';
+    }
+}
+
+Token check_reserved(char *token)
+
+{
+
+    if (!token)
+    {
+        lexical_error("[MEMORY_CRITICAL] The given token is null", line_n);
+        exit(EXIT_FAILURE);
+    }
+    if (strcmp(token, "BEGIN") == 0)
+        return BEGIN;
+    if (strcmp(token, "END") == 0)
+        return END;
+    if (strcmp(token, "READ") == 0)
+        return READ;
+    if (strcmp(token, "WRITE") == 0)
+        return WRITE;
+    return ID;
+}
 
 // return single token
-int scanner(FILE *file)
+Token scanner(FILE *file)
 {
     int in_char,
         c;
     clear_buffer();
 
     if (feof(file))
+    {
         return SCANEOF;
+    }
 
     while ((in_char = getc(file)) != EOF)
     {
@@ -61,7 +88,7 @@ int scanner(FILE *file)
             for (c = getc(file); isalnum(c) || c == '_'; c = getc(file))
                 buffer_char(c);
             ungetc(c, stdin);
-            return check_reserved();
+            return check_reserved(token_buffer);
         }
         else if (isdigit(in_char))
         {
@@ -71,6 +98,12 @@ int scanner(FILE *file)
                 buffer_char(c);
             ungetc(c, stdin);
             return INT_LITERAL;
+        }
+        else if (in_char == '\n')
+        {
+            ++line_n;
+
+            return scanner(file);
         }
         else if (in_char == '(')
         {
@@ -98,6 +131,7 @@ int scanner(FILE *file)
         }
         else if (in_char == ':')
         {
+
             /* look for assignment := */
             c = getc(file);
             if (c == '=')
@@ -105,21 +139,30 @@ int scanner(FILE *file)
             else
             {
                 ungetc(c, stdin);
-                lexical_error(in_char);
+                lexical_error("Maybe u meant \':=\' instead of \':\'?", line_n);
             }
         }
         else if (in_char == '{')
         {
             /* comment start: skip until '}' */
-            do
+
+            // Save the old postion of the cursor
+            long cursor_pos = ftell(file);
+
             {
                 c = getc(file);
+
                 if (c == EOF)
                 {
-                    lexical_error(in_char);
+                    lexical_error("\'{\' missing  \'}\'", line_n);
                     return SCANEOF;
                 }
-            } while (c != '}');
+            }
+            while (c != '}')
+                ;
+
+            // Reset the cursor position to the old position
+            fseek(file, -cursor_pos, SEEK_CUR);
         }
 
         // comment ignoring
@@ -138,18 +181,12 @@ int scanner(FILE *file)
 
         else
         {
-            lexical_error(in_char);
+            char errorBuffer[100];
+            snprintf(errorBuffer, sizeof(errorBuffer), "Invalid syntax with '%c'", in_char);
+
+            lexical_error(errorBuffer, line_n);
         }
     }
-
+    printf("EOF reached\n");
     return SCANEOF;
-}
-
-// Put the new character to the chars buffer (save the hole variable name )
-// todo: work with dynamic token_buffer
-void buffer_char(int c)
-{
-    size_t len = strlen(token_buffer);
-    token_buffer[len] = (char)c;
-    token_buffer[len + 1] = '\0';
 }

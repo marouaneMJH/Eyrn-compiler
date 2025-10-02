@@ -1,0 +1,3 @@
+BEGIN
+name := 5;
+END

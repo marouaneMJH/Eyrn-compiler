@@ -34,6 +34,8 @@ run: $(TARGET)
 	@echo "[!] Running $(TARGET)"
 	@./$(TARGET) && echo "[+] Done running" || echo "[-] Runtime error"
 
+
+test: clean all
 # Nettoyage
 clean:
 	@echo "[!] Cleaning build files"
