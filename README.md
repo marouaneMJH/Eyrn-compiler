@@ -11,7 +11,7 @@
 ├── Makefile    # facilate the project compiling and  running g
 ```
 
-#How to use this project
+# How to use this project
 
 if the first time u open this project only write make on ur terminal to run compile it and run it
 
