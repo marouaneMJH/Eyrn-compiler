@@ -149,40 +149,10 @@ Token scanner(FILE *file)
             }
         }
         else if (in_char == '{')
-        {
-            /* comment start: skip until '}' */
-            fpos_t pos;
-            fgetpos(file, &pos); // save the position
-
-            c = getc(file);
-            if (c == EOF)
-            {
-                lexical_error("'{\' missing  '}'", line_n);
-                return SCANEOF;
-            }
-
-            // keep reading until we find '}'
-            while (c != '}' && c != EOF)
-            {
-                c = getc(file);
-            }
-
-            if (c == EOF)
-            {
-                lexical_error("'{\' missing  '}'", line_n);
-                return SCANEOF;
-            }
-
             return CURLY_BRACE_OPEN;
 
-            // Reset the cursor position
-            fsetpos(file, &pos);
-        }
-        //  todo: notie the case of single '}` error
         else if (in_char == '}')
-        {
             return CURLY_BRACE_CLOSE;
-        }
         // comment ignoring
         else if (in_char == '/')
         {
@@ -193,9 +163,6 @@ Token scanner(FILE *file)
             else
                 ungetc(c, file);
         }
-        // todo: work with functions
-        // else if (check_comment())
-        //     handle_comment();
 
         else
         {

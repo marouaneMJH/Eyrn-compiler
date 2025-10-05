@@ -5,7 +5,6 @@
 
 typedef enum TokenTyped
 {
-
     BEGIN,
     END,
     READ,
@@ -25,7 +24,7 @@ typedef enum TokenTyped
     ASSIGN_OP,
 } Token;
 
-// TODO:
+// TODO: Separate Header File
 #ifndef CLI_STYLE_H
 #define CLI_STYLE_H
 
@@ -48,10 +47,13 @@ typedef enum TokenTyped
 #define FG_WHITE "\033[37m"
 
 #endif /* CLI_STYLE_H */
-
+/// clear
 void clear_buffer(void);
+
 void buffer_char(int c);
+
 Token check_reserved(char *token);
+
 void lexical_error(char errorStr[], int errorLine);
 
 Token scanner(FILE *file);
