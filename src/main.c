@@ -38,7 +38,7 @@ int main()
             "SCAN_OF",
             "PLUS_OP",
             "MINUS_OP",
-            "SCANE_OF",
+            "SCANEOF",
             "L_PAREN",
             "R_PAREN",
             "SEMICOLON",
@@ -48,7 +48,7 @@ int main()
 
         fprintf(out_file, "%s ", token_names[t]);
 
-        if (i > 20)
+        if (i > 100)
             break;
     }
 

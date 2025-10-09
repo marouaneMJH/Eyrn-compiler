@@ -1,6 +1,8 @@
 #ifndef SCANNER_H
 #define SCANNER_H
 
+#include <stdio.h>
+
 #define MAX_LEXEME_LEN 64
 
 typedef enum TokenTyped

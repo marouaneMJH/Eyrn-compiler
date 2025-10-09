@@ -1,7 +1,7 @@
 BEGIN
 BEGIN
 BEGIN
-name := 5;
+name := 5+9 ;
 name := 5;
 name : 5;
 { name:= 7;}
