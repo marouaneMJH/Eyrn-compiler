@@ -1,54 +1,66 @@
-
 #include "parser.h"
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-// Global variables
-Token current_token;
 FILE *file_out;
+FILE *file;
+Token current_token;
 
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
+void init_parser(FILE *input_file, FILE *output_file)
+{
+    file = input_file;
+    file_out = output_file;
+}
+
 void system_goal(void)
 {
-    /* <system_goal> ::= <program> SCANEOF */
+    /*<system goal> :: <program SCANEOF >*/
+    current_token = scanner(file);
     program();
     match(SCANEOF);
 }
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
-// D'une façon similaire on a la procédure suivante pour program()
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
+
 void program(void)
 {
-    /* <program> ::= begin <inst_list> end */
+    /* <program> :: begin <inst_list end>*/
     match(BEGIN);
     inst_list();
     match(END);
 }
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
+
 void inst_list(void)
 {
-    // BEGIN
-    /* <inst_list> ::= <inst> { <inst> } */
+    /*<inst_list> ::= <inst> {<inst>} */
     inst();
-    while (current_token == SEMICOLON)
-        inst();
-    // END
+    while (true)
+    {
+        switch (next_token())
+        {
+        case ID:
+        case READ:
+        case WRITE:
+            inst();
+            break;
+        default:
+            return;
+        }
+    }
 }
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
+
 void inst(void)
 {
     Token tok = next_token();
     switch (tok)
     {
     case ID:
-        /* <inst> ::= ID := <expr>; */
+        /*<inst>	::= ID :=<expr>	*/
         match(ID);
         match(ASSIGN_OP);
         expression();
         match(SEMICOLON);
         break;
     case READ:
-        /* <inst> ::= READ ( <id list> ); */
         match(READ);
         match(L_PAREN);
         id_list();
@@ -56,26 +68,21 @@ void inst(void)
         match(SEMICOLON);
         break;
     case WRITE:
-        /* <inst> ::= WRITE ( <expr list> ); */
+        /* <inst>	::= WRITE*/
         match(WRITE);
         match(L_PAREN);
         expr_list();
         match(R_PAREN);
         match(SEMICOLON);
         break;
-        // default:
-        //     syntax_error(tok);
-        //     break;
+    default:
+        syntax_error(tok);
+        break;
     }
 }
-/*
-next_token();
-return current_token;
-*/
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
 void id_list(void)
 {
-    /* <id list> ::= ID { , ID } */
+    /* <id_list> ::= ID {, ID}	*/
     match(ID);
     while (next_token() == COMMA)
     {
@@ -83,10 +90,21 @@ void id_list(void)
         match(ID);
     }
 }
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
+void expression(void)
+{
+    Token t;
+
+    /*<expr> ::= <prim> {<addop>	<prim>}	*/
+    prim();
+    for (t = next_token(); t == PLUS_OP || t == MINUS_OP; t = next_token())
+    {
+        add_op();
+        prim();
+    }
+}
 void expr_list(void)
 {
-    /* <expr list> ::= <expr> { , <expr> } */
+    /* <expr_list>	::= <expr> {,<expr>} */
     expression();
     while (next_token() == COMMA)
     {
@@ -94,76 +112,75 @@ void expr_list(void)
         expression();
     }
 }
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
-void expression(void)
+void add_op(void)
 {
-    add_opp();
-    Token token = next_token();
-    while (token == PLUS_OP || token == MINUS_OP)
-    {
-        add_opp();
-        token = next_token();
-    }
-}
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
-void add_opp(void)
-{
-    /* <add op> ::= + | - */
-    Token token = next_token();
-    if (token == PLUS_OP || token == MINUS_OP)
-        match(token);
+    Token t = next_token();
+    /* <add_op> ::= PLUS_OP || MINUS_OP*/
+    if (t == PLUS_OP || t == MINUS_OP)
+        match(t);
     else
-        syntax_error(token);
+        syntax_error(t);
 }
-// == == == == == == == == == == == == == == == == == == == == == == == == == == == == == =
-void factor(void)
+void prim(void)
 {
-    Token token = next_token();
-    switch (token)
+    Token tok = next_token();
+    switch (tok)
     {
-    case ID:
-        /* <factor> ::= ID */
-        match(ID);
-        break;
-    case INT_LITERAL:
-        /* <factor> ::= INTLITERAL */
-        match(INT_LITERAL);
-        break;
     case L_PAREN:
-        /* <factor> ::= ( <expr> ) */
+        /* <prim ::= (<expr>)>	*/
         match(L_PAREN);
         expression();
         match(R_PAREN);
         break;
+    case ID:
+        /* <prim ::= ID>*/
+        match(ID);
+        break;
+    case INT_LITERAL:
+        /*<prim> ::= INTLITERAL */
+        match(INT_LITERAL);
+        break;
+    case FLOAT_LITERAL:
+        /*<prim> ::= FLOAT_LITERAL */
+        match(FLOAT_LITERAL);
+        break;
     default:
-        syntax_error(token);
+        syntax_error(tok);
         break;
     }
 }
 
-Token next_token()
+Token next_token(void)
 {
-    int token_value;
-    if (fscanf(file_out, "%d ", &token_value) == 1)
+    return current_token;
+}
+
+void match(Token expected_token)
+{
+    if (current_token == expected_token)
     {
-        return (Token)token_value;
+        current_token = scanner(file);
     }
     else
     {
-        return SCANEOF; // Return end-of-file token if no more tokens can be read
+        const char *token_names[] = {
+            "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
+            "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_OF", "PLUS_OP", "MINUS_OP",
+            "SCANEOF", "L_PAREN", "R_PAREN", "SEMICOLON", "COMMA", "ASSIGN_OP"};
+
+        printf("Syntax Error: Expected '%s', but got '%s'\n",
+               token_names[expected_token], token_names[current_token]);
+        syntax_error(current_token);
     }
 }
 
-void match(Token t)
+void syntax_error(Token token)
 {
-    current_token = next_token();
-    if (current_token != t)
-    {
-        syntax_error(t);
-    }
-}
+    const char *token_names[] = {
+        "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
+        "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_OF", "PLUS_OP", "MINUS_OP",
+        "SCANEOF", "L_PAREN", "R_PAREN", "SEMICOLON", "COMMA", "ASSIGN_OP"};
 
-void syntax_error(Token t)
-{
-    printf("{Error}: %d", t);
+    printf("Syntax Error: Unexpected token '%s'\n", token_names[token]);
+    exit(EXIT_FAILURE);
 }
