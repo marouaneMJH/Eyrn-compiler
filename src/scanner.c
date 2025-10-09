@@ -103,12 +103,58 @@ Token scanner(FILE *file)
         }
         else if (isdigit(in_char))
         {
-            /* integer literal: INTLITERAL ::= DIGIT+ */
+            /* number literal: can be INT_LITERAL or FLOAT_LITERAL */
             buffer_char(in_char);
+            bool is_float = false;
+
+            /* read digits before decimal point */
             for (c = getc(file); isdigit(c); c = getc(file))
                 buffer_char(c);
+
+            /* check for decimal point */
+            if (c == '.')
+            {
+                is_float = true;
+                buffer_char(c);
+                c = getc(file);
+
+                /* read digits after decimal point */
+                if (isdigit(c))
+                {
+                    buffer_char(c);
+                    for (c = getc(file); isdigit(c); c = getc(file))
+                        buffer_char(c);
+                }
+            }
+
             ungetc(c, file);
-            return INT_LITERAL;
+            return is_float ? FLOAT_LITERAL : INT_LITERAL;
+        }
+        // Case where the float only start with .
+        else if (in_char == '.')
+        {
+            /* handle numbers starting with decimal point like .123 */
+            c = getc(file);
+            if (isdigit(c))
+            {
+                buffer_char(in_char); /* buffer the '.' */
+                buffer_char(c);
+
+                /* read remaining digits */
+                for (c = getc(file); isdigit(c); c = getc(file))
+                    buffer_char(c);
+
+                ungetc(c, file);
+                return FLOAT_LITERAL;
+            }
+            else
+            {
+                /* not a float, put back the character and handle '.' as unknown */
+                ungetc(c, file);
+                char errorBuffer[100];
+                snprintf(errorBuffer, sizeof(errorBuffer), "Invalid syntax with '%c'", in_char);
+                lexical_error(errorBuffer, line_n);
+            }
         }
 
         else if (in_char == '(')
