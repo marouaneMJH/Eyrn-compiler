@@ -1,13 +1,5 @@
-#include <stdio.h>
-
-#include <stdlib.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-
-#include "scanner.h"
+#include "../include/scanner.h"
+#include "../include/cli_style.h"
 
 char token_buffer[MAX_LEXEME_LEN];
 
@@ -219,7 +211,7 @@ Token scanner(FILE *file)
     return SCAN_OF;
 }
 
-void runScanner(FILE *in_file, FILE *ou_file)
+void run_scanner(FILE *in_file, FILE *ou_file)
 {
     Token token;
     while (true)

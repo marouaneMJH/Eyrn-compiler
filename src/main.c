@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include "scanner.h"
-#include "parser.h"
+#include "./../include/index.h"
 
 #define CHECK_FILE(file, path)                     \
     if (file == NULL)                              \
@@ -24,7 +22,7 @@ int main()
     CHECK_FILE(input_scanner_file, IN_SCANNER_FILE_PATH);
 
     // printf("Starting parser...\n");
-    // runScanner(input_scanner_file, input_file);
+    // run_scanner(input_scanner_file, input_file);
     // printf("Starting parser...\n");
 
     printf("Starting parser...\n");

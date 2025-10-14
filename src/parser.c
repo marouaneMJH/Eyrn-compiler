@@ -1,12 +1,9 @@
-#include "parser.h"
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "../include/parser.h"
 
-    const char *token_names[] = {
-        "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
-        "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_OF", "PLUS_OP", "MINUS_OP",
-         "L_PAREN", "R_PAREN", "SEMICOLON", "COMMA", "ASSIGN_OP"};
+const char *token_names[] = {
+    "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
+    "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_OF", "PLUS_OP", "MINUS_OP",
+    "L_PAREN", "R_PAREN", "SEMICOLON", "COMMA", "ASSIGN_OP"};
 
 FILE *file_out;
 FILE *file;
@@ -169,7 +166,6 @@ void match(Token expected_token)
     else
     {
 
-
         printf("Syntax Error: Expected '%s', but got '%s'\n",
                token_names[expected_token], token_names[current_token]);
         syntax_error(current_token);
@@ -178,7 +174,6 @@ void match(Token expected_token)
 
 void syntax_error(Token token)
 {
-
 
     printf("Syntax Error: Unexpected token '%s'\n", token_names[token]);
     exit(EXIT_FAILURE);

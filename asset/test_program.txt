@@ -1,5 +1,7 @@
 BEGIN
   x := (5);
-  marouanee:= 29
+  marouanee:= 29;
   y := (3.14);
+
+  WRITE();
 END

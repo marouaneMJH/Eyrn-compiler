@@ -2,6 +2,9 @@
 #define PARSER_H
 
 #include "scanner.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 extern FILE *file;
 extern FILE *file_out;

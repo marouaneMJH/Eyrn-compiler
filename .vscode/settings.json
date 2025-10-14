@@ -2,6 +2,10 @@
     "files.associations": {
         "*.ejs": "html",
         "stdlib.h": "c",
-        "scanner.h": "c"
+        "scanner.h": "c",
+        "index.h": "c",
+        "parser.h": "c",
+        "string.h": "c",
+        "stdbool.h": "c"
     }
 }
