@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+    const char *token_names[] = {
+        "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
+        "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_OF", "PLUS_OP", "MINUS_OP",
+         "L_PAREN", "R_PAREN", "SEMICOLON", "COMMA", "ASSIGN_OP"};
+
 FILE *file_out;
 FILE *file;
 Token current_token;
@@ -15,10 +20,10 @@ void init_parser(FILE *input_file, FILE *output_file)
 
 void system_goal(void)
 {
-    /*<system goal> :: <program SCANEOF >*/
+    /*<system goal> :: <program SCAN_OF >*/
     current_token = scanner(file);
     program();
-    match(SCANEOF);
+    match(SCAN_OF);
 }
 
 void program(void)
@@ -163,10 +168,7 @@ void match(Token expected_token)
     }
     else
     {
-        const char *token_names[] = {
-            "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
-            "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_OF", "PLUS_OP", "MINUS_OP",
-            "SCANEOF", "L_PAREN", "R_PAREN", "SEMICOLON", "COMMA", "ASSIGN_OP"};
+
 
         printf("Syntax Error: Expected '%s', but got '%s'\n",
                token_names[expected_token], token_names[current_token]);
@@ -176,10 +178,7 @@ void match(Token expected_token)
 
 void syntax_error(Token token)
 {
-    const char *token_names[] = {
-        "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
-        "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_OF", "PLUS_OP", "MINUS_OP",
-        "SCANEOF", "L_PAREN", "R_PAREN", "SEMICOLON", "COMMA", "ASSIGN_OP"};
+
 
     printf("Syntax Error: Unexpected token '%s'\n", token_names[token]);
     exit(EXIT_FAILURE);

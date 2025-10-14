@@ -19,7 +19,6 @@ typedef enum TokenTyped
     SCAN_OF,
     PLUS_OP,
     MINUS_OP,
-    SCANEOF,
     L_PAREN,
     R_PAREN,
     SEMICOLON,
@@ -60,4 +59,6 @@ Token check_reserved(char *token);
 void lexical_error(char errorStr[], int errorLine);
 
 Token scanner(FILE *file);
+
+void runScanner(FILE *in_file, FILE *out_file);
 #endif

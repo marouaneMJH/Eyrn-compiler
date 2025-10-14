@@ -1,7 +1,5 @@
 BEGIN
-  x := 5;
-  y := 3.14;
-  z := x + y;
-  READ(a, b);
-  WRITE(x, y, z);
+  x := (5);
+  marouanee:= 29
+  y := (3.14);
 END

@@ -13,8 +13,13 @@ OBJS = $(patsubst src/%.c, build/%.o, $(SRCS))
 # Objects for parser (exclude original main.c, include main_parser.c)
 PARSER_OBJS = $(filter-out build/main.o, $(OBJS)) build/main_parser.o
 
+# Objects for parser (exclude original main.c, include main_parser.c)
+MAIN_OBJS = $(filter-out build/main_parser.o, $(OBJS)) build/main.o
+
+
 # Règle par défaut
 all:  build_dirs compile run
+
 
 # Parser target
 parser: build_dirs compile_parser run_parser
@@ -27,7 +32,7 @@ compile:  $(TARGET)
 compile_parser: $(PARSER_TARGET)
 
 # Lien final pour scanner
-$(TARGET): $(OBJS)
+$(TARGET): $(MAIN_OBJS)
 	@echo "[!] Linking into $(TARGET)"
 	@$(CXX) -o $@ $^ && echo "[+] Build successful" || echo "[-] Linking failed"
 

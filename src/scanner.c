@@ -17,13 +17,10 @@ int buf_index = 0;
 int line_n = 1;
 int err_char = 0;
 
-// todo:
-// bool check_comment(FILE *file);
-// bool handle_comment(FILE *file);
 void lexical_error(char errorStr[], int errorLine)
 
 {
-    printf(FG_RED "[SyntaxError]: " FG_MAGENTA " % s " RESET " line N * " FG_GREEN " % d\n " RESET,
+    printf(FG_RED "[SyntaxError1]: " FG_MAGENTA " % s " RESET " line N * " FG_GREEN " % d\n " RESET,
            errorStr,
            errorLine);
 }
@@ -75,7 +72,7 @@ Token scanner(FILE *file)
 
     if (feof(file))
     {
-        return SCANEOF;
+        return SCAN_OF;
     }
 
     while ((in_char = getc(file)) != EOF)
@@ -219,5 +216,17 @@ Token scanner(FILE *file)
         }
     }
     printf("EOF reached\n");
-    return SCANEOF;
+    return SCAN_OF;
+}
+
+void runScanner(FILE *in_file, FILE *ou_file)
+{
+    Token token;
+    while (true)
+    {
+        token = scanner(in_file);
+        fprintf(ou_file, "%d ", token);
+        if (token == SCAN_OF)
+            break;
+    }
 }
