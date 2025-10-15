@@ -9,12 +9,12 @@ int buf_index = 0;
 int line_n = 1;
 int err_char = 0;
 
-void lexical_error(char errorStr[], int errorLine)
+void lexical_error(char errorStr[])
 
 {
     printf(FG_RED "LexicalError" FG_MAGENTA "[%d]" RESET ": " FG_MAGENTA " % s \n" RESET,
-           errorStr,
-           errorLine);
+           line_n,
+           errorStr);
 }
 
 void clear_buffer(void)
@@ -40,7 +40,7 @@ Token check_reserved(char *token)
 
     if (!token)
     {
-        lexical_error("[MEMORY_CRITICAL] The given token is null", line_n);
+        lexical_error("[MEMORY_CRITICAL] The given token is null");
         exit(EXIT_FAILURE);
     }
     if (strcmp(token, "BEGIN") == 0)
@@ -142,7 +142,7 @@ Token scanner(FILE *file)
                 ungetc(c, file);
                 char errorBuffer[100];
                 snprintf(errorBuffer, sizeof(errorBuffer), "Invalid syntax with '%c'", in_char);
-                lexical_error(errorBuffer, line_n);
+                lexical_error(errorBuffer);
             }
         }
 
@@ -180,7 +180,7 @@ Token scanner(FILE *file)
             else
             {
                 ungetc(c, file);
-                lexical_error("maybe u meant \':=\' instead of \':\'?", line_n);
+                lexical_error("maybe you meant \':=\' instead of \':\'?");
             }
         }
         else if (in_char == '{')
@@ -196,7 +196,10 @@ Token scanner(FILE *file)
                     ;
 
             else
-                ungetc(c, file);
+                {
+                    lexical_error("maybe you meant '//' for comments instead of '/'?");
+                    ungetc(in_char, file);
+                }
         }
 
         else
@@ -204,7 +207,7 @@ Token scanner(FILE *file)
             char errorBuffer[100];
             snprintf(errorBuffer, sizeof(errorBuffer), "Invalid syntax with '%c'", in_char);
 
-            lexical_error(errorBuffer, line_n);
+            lexical_error(errorBuffer);
         }
     }
     printf("EOF reached\n");

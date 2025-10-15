@@ -19,7 +19,7 @@ void init_parser(FILE *input_file, FILE *output_file)
 
 void system_goal(void)
 {
-    /*<system goal> :: <program SCAN_OF >*/
+    /*<system goal> :: <program SCAN_EOF >*/
     current_token = scanner(file);
     program();
     match(SCAN_OF);
@@ -36,7 +36,7 @@ void program(void)
 void inst_list(void)
 {
     /*<inst_list> ::= <inst> {<inst>} */
-    inst();
+    //inst();
     while (true)
     {
         switch (next_token())

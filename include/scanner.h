@@ -37,7 +37,7 @@ void buffer_char(int c);
 
 Token check_reserved(char *token);
 
-void lexical_error(char errorStr[], int errorLine);
+void lexical_error(char errorStr[]);
 
 Token scanner(FILE *file);
 
