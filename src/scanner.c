@@ -1,13 +1,5 @@
-#include <stdio.h>
-
-#include <stdlib.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-
-#include "scanner.h"
+#include "../include/scanner.h"
+#include "../include/cli_style.h"
 
 char token_buffer[MAX_LEXEME_LEN];
 
@@ -17,15 +9,12 @@ int buf_index = 0;
 int line_n = 1;
 int err_char = 0;
 
-// todo:
-// bool check_comment(FILE *file);
-// bool handle_comment(FILE *file);
-void lexical_error(char errorStr[], int errorLine)
+void lexical_error(char errorStr[])
 
 {
-    printf(FG_RED "[SyntaxError]: " FG_MAGENTA " % s " RESET " line N * " FG_GREEN " % d\n " RESET,
-           errorStr,
-           errorLine);
+    printf(FG_RED "LexicalError" FG_MAGENTA "[%d]" RESET ": " FG_MAGENTA " % s \n" RESET,
+           line_n,
+           errorStr);
 }
 
 void clear_buffer(void)
@@ -51,7 +40,7 @@ Token check_reserved(char *token)
 
     if (!token)
     {
-        lexical_error("[MEMORY_CRITICAL] The given token is null", line_n);
+        lexical_error("[MEMORY_CRITICAL] The given token is null");
         exit(EXIT_FAILURE);
     }
     if (strcmp(token, "BEGIN") == 0)
@@ -75,7 +64,7 @@ Token scanner(FILE *file)
 
     if (feof(file))
     {
-        return SCANEOF;
+        return SCAN_OF;
     }
 
     while ((in_char = getc(file)) != EOF)
@@ -103,12 +92,58 @@ Token scanner(FILE *file)
         }
         else if (isdigit(in_char))
         {
-            /* integer literal: INTLITERAL ::= DIGIT+ */
+            /* number literal: can be INT_LITERAL or FLOAT_LITERAL */
             buffer_char(in_char);
+            bool is_float = false;
+
+            /* read digits before decimal point */
             for (c = getc(file); isdigit(c); c = getc(file))
                 buffer_char(c);
+
+            /* check for decimal point */
+            if (c == '.')
+            {
+                is_float = true;
+                buffer_char(c);
+                c = getc(file);
+
+                /* read digits after decimal point */
+                if (isdigit(c))
+                {
+                    buffer_char(c);
+                    for (c = getc(file); isdigit(c); c = getc(file))
+                        buffer_char(c);
+                }
+            }
+
             ungetc(c, file);
-            return INT_LITERAL;
+            return is_float ? FLOAT_LITERAL : INT_LITERAL;
+        }
+        // Case where the float only start with .
+        else if (in_char == '.')
+        {
+            /* handle numbers starting with decimal point like .123 */
+            c = getc(file);
+            if (isdigit(c))
+            {
+                buffer_char(in_char); /* buffer the '.' */
+                buffer_char(c);
+
+                /* read remaining digits */
+                for (c = getc(file); isdigit(c); c = getc(file))
+                    buffer_char(c);
+
+                ungetc(c, file);
+                return FLOAT_LITERAL;
+            }
+            else
+            {
+                /* not a float, put back the character and handle '.' as unknown */
+                ungetc(c, file);
+                char errorBuffer[100];
+                snprintf(errorBuffer, sizeof(errorBuffer), "Invalid syntax with '%c'", in_char);
+                lexical_error(errorBuffer);
+            }
         }
 
         else if (in_char == '(')
@@ -145,44 +180,14 @@ Token scanner(FILE *file)
             else
             {
                 ungetc(c, file);
-                lexical_error("maybe u meant \':=\' instead of \':\'?", line_n);
+                lexical_error("maybe you meant \':=\' instead of \':\'?");
             }
         }
         else if (in_char == '{')
-        {
-            /* comment start: skip until '}' */
-            fpos_t pos;
-            fgetpos(file, &pos); // save the position
-
-            c = getc(file);
-            if (c == EOF)
-            {
-                lexical_error("'{\' missing  '}'", line_n);
-                return SCANEOF;
-            }
-
-            // keep reading until we find '}'
-            while (c != '}' && c != EOF)
-            {
-                c = getc(file);
-            }
-
-            if (c == EOF)
-            {
-                lexical_error("'{\' missing  '}'", line_n);
-                return SCANEOF;
-            }
-
             return CURLY_BRACE_OPEN;
 
-            // Reset the cursor position
-            fsetpos(file, &pos);
-        }
-        //  todo: notie the case of single '}` error
         else if (in_char == '}')
-        {
             return CURLY_BRACE_CLOSE;
-        }
         // comment ignoring
         else if (in_char == '/')
         {
@@ -191,20 +196,32 @@ Token scanner(FILE *file)
                     ;
 
             else
-                ungetc(c, file);
+                {
+                    lexical_error("maybe you meant '//' for comments instead of '/'?");
+                    ungetc(in_char, file);
+                }
         }
-        // todo: work with functions
-        // else if (check_comment())
-        //     handle_comment();
 
         else
         {
             char errorBuffer[100];
             snprintf(errorBuffer, sizeof(errorBuffer), "Invalid syntax with '%c'", in_char);
 
-            lexical_error(errorBuffer, line_n);
+            lexical_error(errorBuffer);
         }
     }
     printf("EOF reached\n");
-    return SCANEOF;
+    return SCAN_OF;
+}
+
+void run_scanner(FILE *in_file, FILE *ou_file)
+{
+    Token token;
+    while (true)
+    {
+        token = scanner(in_file);
+        fprintf(ou_file, "%d ", token);
+        if (token == SCAN_OF)
+            break;
+    }
 }

@@ -1,9 +1,6 @@
 BEGIN
-BEGIN
-BEGIN
-name := 5;
-name := 5;
-name : 5;
-{ name:= 7;}
-name : 5;
+  x := 5
+  y := 3.14;
 END
+
+

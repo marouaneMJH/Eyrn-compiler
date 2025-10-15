@@ -1,4 +1,6 @@
-#include "./../include/index.h"
+#include <stdio.h>
+#include "scanner.h"
+#include "parser.h"
 
 #define CHECK_FILE(file, path)                     \
     if (file == NULL)                              \
@@ -8,22 +10,15 @@
     }
 
 #define IN_FILE_PATH "./asset/test_program.txt"
-#define IN_SCANNER_FILE_PATH "./asset/file.txt"
 #define OUT_FILE_PATH "./asset/out_file.txt"
 
 int main()
 {
-    FILE *input_file = fopen(IN_FILE_PATH, "r+");
-    FILE *input_scanner_file = fopen(IN_SCANNER_FILE_PATH, "r");
+    FILE *input_file = fopen(IN_FILE_PATH, "r");
     FILE *output_file = fopen(OUT_FILE_PATH, "w");
 
     CHECK_FILE(input_file, IN_FILE_PATH);
     CHECK_FILE(output_file, OUT_FILE_PATH);
-    CHECK_FILE(input_scanner_file, IN_SCANNER_FILE_PATH);
-
-    // printf("Starting parser...\n");
-    // run_scanner(input_scanner_file, input_file);
-    // printf("Starting parser...\n");
 
     printf("Starting parser...\n");
 
