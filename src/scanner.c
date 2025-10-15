@@ -12,7 +12,7 @@ int err_char = 0;
 void lexical_error(char errorStr[], int errorLine)
 
 {
-    printf(FG_RED "[SyntaxError1]: " FG_MAGENTA " % s " RESET " line N * " FG_GREEN " % d\n " RESET,
+    printf(FG_RED "LexicalError" FG_MAGENTA "[%d]" RESET ": " FG_MAGENTA " % s \n" RESET,
            errorStr,
            errorLine);
 }

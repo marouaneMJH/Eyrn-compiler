@@ -26,7 +26,7 @@
 *.la
 *.lo
 
-# Shared objects (inc. Windows DLLs)
+# Shared objects (inc. Windows DLLs)`
 *.dll
 *.so
 *.so.*
@@ -54,5 +54,8 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+build/
 
 # End of https://www.toptal.com/developers/gitignore/api/c

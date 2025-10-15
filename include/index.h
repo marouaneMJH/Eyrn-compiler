@@ -4,5 +4,6 @@
 #include <stdio.h>
 #include "scanner.h"
 #include "parser.h"
+#include "globals.h"
 
 #endif

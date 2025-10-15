@@ -1,4 +1,6 @@
 #include "../include/parser.h"
+#include "../include/cli_style.h"
+#include "../include/globals.h"
 
 const char *token_names[] = {
     "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
@@ -166,8 +168,8 @@ void match(Token expected_token)
     else
     {
 
-        printf("Syntax Error: Expected '%s', but got '%s'\n",
-               token_names[expected_token], token_names[current_token]);
+        // printf("Syntax Error: Expected '%s', but got '%s'\n",
+        //        token_names[expected_token], token_names[current_token]);
         syntax_error(current_token);
     }
 }
@@ -175,6 +177,6 @@ void match(Token expected_token)
 void syntax_error(Token token)
 {
 
-    printf("Syntax Error: Unexpected token '%s'\n", token_names[token]);
-    exit(EXIT_FAILURE);
+    printf(FG_RED "Syntax Error" FG_MAGENTA "[%d]" RESET ": Unexpected token '%s'\n", line_n, token_names[token]);
+    // exit(EXIT_FAILURE);
 }

@@ -9,6 +9,8 @@
 
 // Lexical analysis.
 
+extern int line_n;
+
 // Syntax analysis
 
 // Semantic analysis
