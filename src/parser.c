@@ -174,6 +174,6 @@ void match(Token expected_token)
 void syntax_error(Token token)
 {
 
-    printf(FG_RED "Syntax Error" FG_MAGENTA "[%d]" RESET ": Unexpected token '%s'\n", line_n, token_names[token]);
+    printf(FG_RED UNDERLINE BOLD "Syntax Error" FG_MAGENTA "[%d]" RESET ": Unexpected token '%s'\n", line_n, token_names[token]);
     // exit(EXIT_FAILURE);
 }

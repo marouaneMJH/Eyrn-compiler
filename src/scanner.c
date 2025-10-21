@@ -12,7 +12,7 @@ int err_char = 0;
 void lexical_error(char errorStr[])
 
 {
-    printf(FG_RED "LexicalError" FG_MAGENTA "[%d]" RESET ": " FG_MAGENTA " % s \n" RESET,
+    printf(FG_RED BOLD UNDERLINE "LexicalError" FG_MAGENTA "[%d]" RESET ": " FG_MAGENTA " % s \n" RESET,
            line_n,
            errorStr);
 }
@@ -116,7 +116,7 @@ Token scanner(FILE *file)
                 }
             }
 
-            else if(!isalpha(c))
+            else if(isalpha(c))
             {
                 ungetc(c, file);
 
