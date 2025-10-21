@@ -11,7 +11,7 @@ BEGIN
 
 // bouskri_1 : 10;
 
-1marouane := 10; 
+1marouane := 10;
 
 WRITE(name1, name2, name3);
 READ(name1, name2, name3);

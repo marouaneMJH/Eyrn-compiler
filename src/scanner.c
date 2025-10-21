@@ -115,12 +115,13 @@ Token scanner(FILE *file)
                         buffer_char(c);
                 }
             }
-            // else
-            // {
-            //     ungetc(c, file);
 
-            //     lexical_error("Can't start ID with number");
-            // }
+            else if(!isalpha(c))
+            {
+                ungetc(c, file);
+
+                lexical_error("Can't start ID with number");
+            }
             ungetc(c, file);
             return is_float ? FLOAT_LITERAL : INT_LITERAL;
         }
