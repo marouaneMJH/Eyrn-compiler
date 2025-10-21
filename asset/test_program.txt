@@ -1,10 +1,26 @@
 BEGIN
-  x := (5);
-  marouanee :=  29 
-  y := 3.14;
-  y := 3.14;
-  y := 3.14;
-  y := 3.14;
-  y := 3.14;
+
+// marouanee = 10; 
+
+
+// this a comment
+
+// empty comment
+//
+
+
+// bouskri_1 : 10;
+
+1marouane := 10; 
+
+WRITE(name1, name2, name3);
+READ(name1, name2, name3);
+marouanee := 10;
+bouskri := 4.5;
+bouskri2 := .5;
+bouskri_2 := .5;
+
+x := (x+9-(10)) + 10;
+y := (y+9-(10)) + 10;
 
 END

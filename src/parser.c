@@ -36,7 +36,7 @@ void program(void)
 void inst_list(void)
 {
     /*<inst_list> ::= <inst> {<inst>} */
-    //inst();
+    // inst();
     while (true)
     {
         switch (next_token())
@@ -167,9 +167,6 @@ void match(Token expected_token)
     }
     else
     {
-
-        // printf("Syntax Error: Expected '%s', but got '%s'\n",
-        //        token_names[expected_token], token_names[current_token]);
         syntax_error(current_token);
     }
 }

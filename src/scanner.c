@@ -6,7 +6,7 @@ char token_buffer[MAX_LEXEME_LEN];
 // /* Function prototypes */
 
 int buf_index = 0;
-int line_n = 1;
+int line_n = 2;
 int err_char = 0;
 
 void lexical_error(char errorStr[])
@@ -115,7 +115,12 @@ Token scanner(FILE *file)
                         buffer_char(c);
                 }
             }
+            // else
+            // {
+            //     ungetc(c, file);
 
+            //     lexical_error("Can't start ID with number");
+            // }
             ungetc(c, file);
             return is_float ? FLOAT_LITERAL : INT_LITERAL;
         }
@@ -192,14 +197,19 @@ Token scanner(FILE *file)
         else if (in_char == '/')
         {
             if (getc(file) == '/')
+            {
                 for (char c = getc(file); c != EOF && c != '\n'; c = getc(file))
                     ;
+            }
 
             else
-                {
-                    lexical_error("maybe you meant '//' for comments instead of '/'?");
-                    ungetc(in_char, file);
-                }
+            {
+
+
+                // ? attention: make sure to remove this expression cuz we dont have the '/'
+                // ungetc(in_char, file);
+                lexical_error("Maybe you meant '//' for comments instead of '/'?");
+            }
         }
 
         else
