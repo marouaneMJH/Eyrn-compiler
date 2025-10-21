@@ -6,7 +6,7 @@ char token_buffer[MAX_LEXEME_LEN];
 // /* Function prototypes */
 
 int buf_index = 0;
-int line_n = 2;
+int line_n = 1;
 int err_char = 0;
 
 void lexical_error(char errorStr[])
@@ -201,6 +201,7 @@ Token scanner(FILE *file)
             {
                 for (char c = getc(file); c != EOF && c != '\n'; c = getc(file))
                     ;
+                    line_n++;
             }
 
             else

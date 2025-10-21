@@ -49,7 +49,10 @@ build/%.o: src/%.c
 # Exécution scanner
 run: $(TARGET)
 	@echo "[!] Running $(TARGET)"
-	@./$(TARGET) && echo "[+] Done running" || echo "[-] Runtime error"
+	@echo
+	@echo
+	@./$(TARGET) &&   echo; echo && echo "[+] Done running" || echo "[-] Runtime error"
+	
 
 # Exécution parser  
 run_parser: $(PARSER_TARGET)
