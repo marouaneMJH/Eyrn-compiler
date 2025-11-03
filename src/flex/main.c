@@ -2,7 +2,7 @@
 #include "./lex.yy.c"
 
 
-int   main()
+int main()
 {
     yylex();
     return 0;
