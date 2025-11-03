@@ -4,7 +4,7 @@
 
 const char *token_names[] = {
     "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
-    "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_OF", "PLUS_OP", "MINUS_OP",
+    "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_EOF", "PLUS_OP", "MINUS_OP",
     "L_PAREN", "R_PAREN", "SEMICOLON", "COMMA", "ASSIGN_OP"};
 
 FILE *file_out;
@@ -22,7 +22,7 @@ void system_goal(void)
     /*<system goal> :: <program SCAN_EOF >*/
     current_token = scanner(file);
     program();
-    match(SCAN_OF);
+    match(SCAN_EOF);
 }
 
 void program(void)

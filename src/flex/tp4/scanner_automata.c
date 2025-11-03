@@ -1,5 +1,37 @@
-#include "../include/scanner.h"
-#include "../include/cli_style.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <string.h>
+#include <ctype.h>
+#include "../../../include/cli_style.h"
+
+#define MAX_LEXEME_LEN 64
+
+
+
+
+
+
+typedef enum {
+    SI,
+    ALORS,
+    SINON,
+    OPREL,
+    ID,
+    NB,
+    ERROR
+
+}Token;
+
+
+
+typedef struct
+{
+    Token token;
+    char key_word[MAX_LEXEME_LEN];
+
+}KeyWord;
 
 char token_buffer[MAX_LEXEME_LEN];
 
@@ -11,12 +43,32 @@ int err_char = 0;
 
 
 
-void clear_buffer(void)
-{
-    for (int i = 0; i < MAX_LEXEME_LEN; i++)
-        token_buffer[i] = '\0';
+void clear_buffer(void);
 
-    buf_index = 0;
+void buffer_char(int c);
+
+Token check_reserved(char *token);
+
+void lexical_error(char errorStr[]);
+
+Token scanner(FILE *file);
+
+void run_scanner(FILE *in_file, FILE *out_file);
+
+
+int main()
+{
+    int name;
+    int name2;
+
+    return 0;
+}
+
+void lexical_error(char errorStr[])
+{
+    printf(FG_RED BOLD UNDERLINE "LexicalError" FG_MAGENTA "[%d]" RESET ": " FG_MAGENTA " % s \n" RESET,
+           line_n,
+           errorStr);
 }
 
 void buffer_char(int c)
@@ -37,16 +89,11 @@ Token check_reserved(char *token)
         lexical_error("[MEMORY_CRITICAL] The given token is null");
         exit(EXIT_FAILURE);
     }
-    if (strcmp(token, "BEGIN") == 0)
-        return BEGIN;
-    if (strcmp(token, "END") == 0)
-        return END;
-    if (strcmp(token, "READ") == 0)
-        return READ;
-    if (strcmp(token, "WRITE") == 0)
-        return WRITE;
+
+
     return ID;
 }
+
 
 // return single token
 Token scanner(FILE *file)
@@ -56,10 +103,6 @@ Token scanner(FILE *file)
         c;
     clear_buffer();
 
-    if (feof(file))
-    {
-        return SCAN_EOF;
-    }
 
     while ((in_char = getc(file)) != EOF)
     {
@@ -86,39 +129,10 @@ Token scanner(FILE *file)
         }
         else if (isdigit(in_char))
         {
-            /* number literal: can be INT_LITERAL or FLOAT_LITERAL */
-            buffer_char(in_char);
-            bool is_float = false;
-
-            /* read digits before decimal point */
-            for (c = getc(file); isdigit(c); c = getc(file))
-                buffer_char(c);
-
-            /* check for decimal point */
-            if (c == '.')
-            {
-                is_float = true;
-                buffer_char(c);
-                c = getc(file);
-
-                /* read digits after decimal point */
-                if (isdigit(c))
-                {
-                    buffer_char(c);
-                    for (c = getc(file); isdigit(c); c = getc(file))
-                        buffer_char(c);
-                }
-            }
-
-            else if(isalpha(c))
-            {
-                ungetc(c, file);
-
-                lexical_error("Can't start ID with number");
-            }
-            ungetc(c, file);
-            return is_float ? FLOAT_LITERAL : INT_LITERAL;
+            // return 
         }
+       
+       
         // Case where the float only start with .
         else if (in_char == '.')
         {
@@ -134,7 +148,7 @@ Token scanner(FILE *file)
                     buffer_char(c);
 
                 ungetc(c, file);
-                return FLOAT_LITERAL;
+                return NB;
             }
             else
             {
@@ -146,48 +160,6 @@ Token scanner(FILE *file)
             }
         }
 
-        else if (in_char == '(')
-        {
-            return L_PAREN;
-        }
-        else if (in_char == ')')
-        {
-            return R_PAREN;
-        }
-        else if (in_char == ';')
-        {
-            return SEMICOLON;
-        }
-        else if (in_char == ',')
-        {
-            return COMMA;
-        }
-        else if (in_char == '+')
-        {
-            return PLUS_OP;
-        }
-        else if (in_char == '-')
-        {
-            return MINUS_OP;
-        }
-        else if (in_char == ':')
-        {
-
-            /* look for assignment := */
-            c = getc(file);
-            if (c == '=')
-                return ASSIGN_OP;
-            else
-            {
-                ungetc(c, file);
-                lexical_error("maybe you meant \':=\' instead of \':\'?");
-            }
-        }
-        else if (in_char == '{')
-            return CURLY_BRACE_OPEN;
-
-        else if (in_char == '}')
-            return CURLY_BRACE_CLOSE;
         // comment ignoring
         else if (in_char == '/')
         {
@@ -216,18 +188,7 @@ Token scanner(FILE *file)
             lexical_error(errorBuffer);
         }
     }
-    printf("EOF reached\n");
-    return SCAN_EOF;
+
 }
 
-void run_scanner(FILE *in_file, FILE *ou_file)
-{
-    Token token;
-    while (true)
-    {
-        token = scanner(in_file);
-        fprintf(ou_file, "%d ", token);
-        if (token == SCAN_EOF)
-            break;
-    }
-}
+

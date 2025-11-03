@@ -1,0 +1,7 @@
+14-<
+si aa  > 50 alors
+  ww = 8.e12
+  r = 12.
+  v = .12
+si > alors
+si11
