@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "../../../include/cli_style.h"
 
 /* ============================================================
    CONFIGURATION
@@ -85,14 +86,18 @@ int fail(int retr, FILE *in_file) {
 }
 
 int is_delim(int c) {
-    if (c == EOF) return 1;
-    if (isspace(c)) return 1;
-    switch (c) {
-        case '(' : case ')' : case '{' : case '}' :
-        case ';' : case ',' : case '+' : case '-' :
-        case '*' : case '/' : case '=' : return 1;
-        default: return 0;
-    }
+    // if (c == EOF) return 1;
+    // if () return 1;
+    // switch (c) {
+        // case '(' : case ')' : case '{' : case '}' :
+        // case ';' : case ',' : case '+' : case '-' :
+        // case '*' : case '/' : case '=' : return 1;
+    //     default: return 0;
+    // }
+
+    if(isspace(c) || c == EOF || c == '\n') return 1;
+
+    return 0;
 }
 
 /* ============================================================
@@ -103,13 +108,24 @@ Token next_token(FILE *file) {
 
     clear_buffer();
     int c;
-    int consumed = 0;
     state = start;
+    c = fgetc(file);
+            // Skip new lines
+        if (c == '\n') 
+        {
+            line_n++;
+        };
+
+
 
     while (1) {
-        c = fgetc(file);
-        consumed++;
-        if (c == '\n') line_n++;
+
+ 
+        // Reached EOF
+        if( c == EOF ) {
+            Token token = {SCAN_EOF, "EOF"};
+            return token;
+        }
 
         switch (state) {
 
@@ -221,10 +237,10 @@ Token next_token(FILE *file) {
             if (isdigit(c)) state=20;
             else if (c=='.') state=21;
             else if (c=='E') state=23;
-            else if (is_delim(c)) {
+            else if (is_delim(c) || !isdigit(c)) {
                 if (c!=EOF) retract(1,file);
                 Token t={T_NB,""};
-                strcpy(t.lexeme,token_buffer);
+                strncpy(t.lexeme,token_buffer,strlen(token_buffer)-1);
                 start = 0;
                 return t;
             } else state=fail(strlen(token_buffer),file);
@@ -240,10 +256,12 @@ Token next_token(FILE *file) {
             buffer_char(c);
             if (isdigit(c)) state=22;
             else if (c=='E') state=23;
-            else if (is_delim(c)) {
+            else if (is_delim(c) || !isdigit(c)) {
                 if (c!=EOF) retract(1,file);
                 Token t={T_NB,""};
-                strcpy(t.lexeme,token_buffer);
+                // strcpy(t.lexeme,token_buffer);
+                strncpy(t.lexeme,token_buffer,strlen(token_buffer)-1);
+
                 start = 0;
                 return t;
             } else state=fail(strlen(token_buffer),file);
@@ -259,7 +277,7 @@ Token next_token(FILE *file) {
         case 24:
             buffer_char(c);
             if (isdigit(c)) state=24;
-            else if (is_delim(c)) {
+            else if (is_delim(c) ) {
                 if (c!=EOF) retract(1,file);
                 Token t={T_NB,""};
                 strcpy(t.lexeme,token_buffer);
@@ -289,7 +307,7 @@ Token next_token(FILE *file) {
             break;
 
         case 27:
-            if (!isalnum(c)) {
+            if (is_delim(c) || !isalnum(c) ) {
                 if (c!=EOF) retract(1,file);
                 Token t={T_ID,""};
                 strcpy(t.lexeme,token_buffer);
@@ -302,14 +320,40 @@ Token next_token(FILE *file) {
             break;
 
         default:
-            Token err={T_ERR,"Erreur : caractère inconnu"};
-            start = 0;
-            
-            return err;
-            
+            {
+                Token err;
+                err.type = T_ERR;
+                snprintf(err.lexeme, sizeof(err.lexeme), "Unknown word '%c' in  %d", c,line_n);
+                start = 0;
+                return err;
+            }
         } // end switch
+        c = fgetc(file);
+
     } // end while
 }
+
+
+void scan_file(FILE *file) {
+    if (!file) {
+        fprintf(stderr, "Erreur : fichier introuvable.\n");
+        exit(1);
+    }
+
+    printf("====================================\n\n");
+
+    while (1) {
+        Token t = next_token(file);
+        if (t.type == SCAN_EOF) break;
+        if (t.type == T_ERR) printf(FG_RED "Erreur :" RESET" %s\n", t.lexeme);
+        else printf("Token: %s  Lexeme: %s\n", token_names[t.type], t.lexeme);
+        if (feof(file)) break;
+    }
+
+    printf("\n====================================\n");
+}
+
+
 
 /* ============================================================
    MAIN PROGRAMME
@@ -318,18 +362,9 @@ int main() {
     FILE *input_file = fopen(IN_FILE_PATH, "r");
     if (!input_file) { perror("Impossible d’ouvrir le fichier"); return 1; }
 
-    printf("===== DEMARRAGE ANALYSE LEXICALE =====\n\n");
-
-    while (1) {
-        Token t = next_token(input_file);
-        if (t.type == SCAN_EOF) break;
-        if (t.type == T_ERR) printf("Erreur : %s\n", t.lexeme);
-        else printf("Token: %s  Lexeme: %s\n", token_names[t.type], t.lexeme);
-        if (feof(input_file)) break;
-    }
-
-    printf("\n===== FIN ANALYSE =====\n");
+    scan_file(input_file);
     fclose(input_file);
 
     return 0;
 }
+
