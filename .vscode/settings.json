@@ -4,5 +4,6 @@
         "compare": "c",
         "type_traits": "c",
         "utility": "c"
-    }
+    },
+    "cSpell.enabled": false
 }

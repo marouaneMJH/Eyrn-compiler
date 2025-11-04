@@ -2,5 +2,5 @@ for(i=0;i<10;i++)
 {
     truc[i] = 0;
     machine = 12.3;
-    bidule = .0;/* big commment */
+    bidule = .0;/* big commment */ machine = 12.3; 
 }
