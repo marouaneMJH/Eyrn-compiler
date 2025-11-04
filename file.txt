@@ -1,19 +1,18 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdlib.h>
 #include "../../../include/cli_style.h"
 
-#define CHECK_FILE(file, path)                     \
-    if (file == NULL)                              \
-    {                                              \
-        printf("Could not open file: %s\n", path); \
-        return 1;                                  \
-    }
-
-#define IN_FILE_PATH "test_program.txt"
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
+#define IN_FILE_PATH "test_program_.txt"
 #define MAX_LEXEME_LEN 64
 
+/* ============================================================
+   STRUCTURES ET TYPES
+   ============================================================ */
 typedef enum {
     T_SI,
     T_ALORS,
@@ -22,468 +21,350 @@ typedef enum {
     T_NB,
     T_ID,
     T_ERR,
-    SCAN_EOF,
+    SCAN_EOF
 } TokenType;
+
+char *token_names[]= {
+    "T_SI",
+    "T_ALORS",
+    "T_SINON",
+    "T_OPREL",
+    "T_NB",
+    "T_ID",
+    "T_ERR",
+    "SCAN_EOF"
+};
+
 
 typedef struct {
     TokenType type;
-    char lexeme[256];
+    char lexeme[MAX_LEXEME_LEN];
 } Token;
 
+/* ============================================================
+   VARIABLES GLOBALES
+   ============================================================ */
+int start = 0;   // état de départ (0, 3, 9, 15, 19, 26)
+int state = 0;
+int line_n = 1;
 char token_buffer[MAX_LEXEME_LEN];
 int buf_index = 0;
-int line_n = 1;
-int start = 0;
-int state = 0;
 
-void clear_buffer(void);
-void buffer_char(int c);
-void lexical_error(char errorStr[]);
-char* create_string_copy(char* originalString);
-int fail(int retr, FILE *in_file);
-Token next_token(FILE* file);
-void retract(int retr, FILE *file);
-
-int main()
-{
-    FILE *input_file = fopen(IN_FILE_PATH, "r+");
-    CHECK_FILE(input_file, IN_FILE_PATH);
-
-    printf("Starting parser...\n");
-    
-    for(int i = 0; i < 10; i++)
-    {
-        Token token = next_token(input_file);
-        if (token.type == SCAN_EOF) {
-            break;
-        }
-        printf("Token: %d, Lexeme: %s\n", token.type, token.lexeme);
-    }
-
-    printf("Parsing completed successfully!\n");
-    fclose(input_file);
-    return 0;
-}
-
-void clear_buffer(void)
-{
-    for (int i = 0; i < MAX_LEXEME_LEN; i++)
-        token_buffer[i] = '\0';
+/* ============================================================
+   FONCTIONS OUTILS
+   ============================================================ */
+void clear_buffer(void) {
+    memset(token_buffer, '\0', sizeof(token_buffer));
     buf_index = 0;
 }
 
-void buffer_char(int c)
-{
-    if (buf_index < MAX_LEXEME_LEN - 1)
-    {
+void buffer_char(int c) {
+    if (buf_index < MAX_LEXEME_LEN - 1 && c != EOF) {
         token_buffer[buf_index++] = (char)c;
         token_buffer[buf_index] = '\0';
     }
 }
 
-void retract(int retr, FILE *file)
-{
-    if (!feof(file))
-        fseek(file, -retr, SEEK_CUR);
-    else
-        fseek(file, -retr + 1, SEEK_CUR);
+void retract(int retr, FILE *file) {
+    if (!feof(file)) fseek(file, -retr, SEEK_CUR);
+    else fseek(file, -retr + 1, SEEK_CUR);
 }
 
-int fail(int retr, FILE *in_file)
-{
+int fail(int retr, FILE *in_file) {
     clear_buffer();
     retract(retr, in_file);
-    
-    switch (start)
-    {
-        case 0:  start = 3;  break;
-        case 3:  start = 9;  break;
-        case 9:  start = 15; break;
-        case 15: start = 19; break;
-        case 19: start = 26; break;
-        default: start = -1;
+
+    switch (start) {
+        case 0:  start = 3;  break; // si -> alors
+        case 3:  start = 9;  break; // alors -> sinon
+        case 9:  start = 15; break; // sinon -> oprel
+        case 15: start = 19; break; // oprel -> nb
+        case 19: start = 26; break; // nb -> id
+        default: start = -1; break;
     }
     return start;
 }
 
-Token next_token(FILE *file)
-{
-    if (!file) 
-    {
-        printf("\nError: file not exist!!");
-        exit(0);
-    }
+int is_delim(int c) {
+    // if (c == EOF) return 1;
+    // if () return 1;
+    // switch (c) {
+        // case '(' : case ')' : case '{' : case '}' :
+        // case ';' : case ',' : case '+' : case '-' :
+        // case '*' : case '/' : case '=' : return 1;
+    //     default: return 0;
+    // }
 
-    int c;
+    if(isspace(c) || c == EOF || c == '\n') return 1;
+
+    return 0;
+}
+
+/* ============================================================
+   FONCTION PRINCIPALE DE RECONNAISSANCE
+   ============================================================ */
+Token next_token(FILE *file) {
+    if (!file) { fprintf(stderr, "Erreur : fichier introuvable.\n"); exit(1); }
+
     clear_buffer();
-
-    while (1)
-    {
-        c = fgetc(file);
-
-        if (c == EOF)
+    int c;
+    state = start;
+    c = fgetc(file);
+            // Skip new lines
+        if (c == '\n') 
         {
+            line_n++;
+        };
+
+
+
+    while (1) {
+
+ 
+        // Reached EOF
+        if( c == EOF ) {
             Token token = {SCAN_EOF, "EOF"};
             return token;
         }
 
-        switch (state)
-        {
-            case 0:
-                while (isspace(c))
-                {
-                    if (c == '\n') line_n++;
-                    c = fgetc(file);
-                    if (c == EOF)
-                    {
-                        Token token = {SCAN_EOF, "EOF"};
-                        return token;
-                    }
-                }
-                if (c == 's') state = 1;
-                else state = fail(1, file);
-                break;
+        switch (state) {
 
-            case 1:
-                if (c == 'i') state = 2;
-                else state = fail(2, file);
-                break;
+        /* ------------------- SI (0–2) ------------------- */
+        case 0:
+            while (isspace(c)) { c = fgetc(file); if (c == '\n') line_n++; }
+            if (c == 's') state = 1;
+            else { state = fail(1, file); break; }
+            break;
 
-            case 2:
-                if(isspace(c) || c == EOF)
-                {
-                    if(c == '\n') line_n++;
-                    Token token = {T_SI, "SI"};
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                else
-                    state = fail(1, file);
-                break;
-                
-            case 3:
-                while (isspace(c))
-                {
-                    if (c == '\n') line_n++;
-                    c = fgetc(file);
-                    if (c == EOF)
-                    {
-                        Token token = {SCAN_EOF, "EOF"};
-                        return token;
-                    }
-                }
-                if (c == 'a') state = 4;
-                else state = fail(1, file);
-                break;
+        case 1:
+            if (c == 'i') state = 2;
+            else { state = fail(2, file); break; }
+            break;
 
-            case 4:
-                if (c == 'l') state = 5;
-                else state = fail(2, file);
-                break;
-            
-            case 5:
-                if (c == 'o') state = 6;
-                else state = fail(3, file);
-                break;
-
-            case 6:
-                if (c == 'r') state = 7;
-                else state = fail(4, file);
-                break;
-
-            case 7:
-                if (c == 's') state = 8;
-                else state = fail(5, file);
-                break;
-
-            case 8:
-                if(isspace(c) || c == EOF)
-                {
-                    if(c == '\n') line_n++;
-                    Token token = {T_ALORS, "ALORS"};
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                else
-                    state = fail(6, file);
-                break;
-
-            case 9:
-                while (isspace(c))
-                {
-                    if (c == '\n') line_n++;
-                    c = fgetc(file);
-                    if (c == EOF)
-                    {
-                        Token token = {SCAN_EOF, "EOF"};
-                        return token;
-                    }
-                }
-                if (c == 's') state = 10;
-                else state = fail(1, file);
-                break;
-
-            case 10:
-                if (c == 'i') state = 11;
-                else state = fail(2, file);
-                break;
-
-            case 11:
-                if (c == 'n') state = 12;
-                else state = fail(3, file);
-                break;
-
-            case 12:
-                if (c == 'o') state = 13;
-                else state = fail(4, file);
-                break;
-            
-            case 13:
-                if (c == 'n') state = 14;
-                else state = fail(5, file);
-                break;
-
-            case 14:
-                if(isspace(c) || c == EOF)
-                {
-                    if(c == '\n') line_n++;
-                    Token token = {T_SINON, "SINON"};
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                else
-                    state = fail(6, file);
-                break;
-
-            case 15:
-                while (isspace(c))
-                {
-                    if (c == '\n') line_n++;
-                    c = fgetc(file);
-                    if (c == EOF)
-                    {
-                        Token token = {SCAN_EOF, "EOF"};
-                        return token;
-                    }
-                }
-                buffer_char(c);
-                if (c == '<') state = 16;
-                else if (c == '=') state = 17;
-                else if (c == '>') state = 18;
-                else state = fail(1, file);
-                break;
-
-            case 16:
-                buffer_char(c);
-                if (c == '>' || c == '=') state = 17;
-                else if(c == '\n' || isspace(c) || isalpha(c) || isdigit(c))
-                {
-                    retract(1, file);
-                    Token token = {T_OPREL, "<"};
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                else
-                {
-                    state = fail(2, file);
-                }
-                break;
-
-            case 18:
-                buffer_char(c);
-                if (c == '=') state = 17;
-                else if(c == '\n' || isspace(c) || isalpha(c) || isdigit(c))
-                {
-                    retract(1, file);
-                    Token token = {T_OPREL, ">"};
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                else
-                    state = fail(2, file);
-                break;
-
-            case 17:
-                if(c == '\n' || isspace(c) || isalpha(c) || isdigit(c) || c == EOF)
-                {
-                    retract(1, file);
-                    Token token;
-                    token.type = T_OPREL;
-                    strcpy(token.lexeme, token_buffer);
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                else
-                    state = fail(strlen(token_buffer), file);
-                break;
-            
-            case 19:
-                while (isspace(c))
-                {
-                    if (c == '\n') line_n++;
-                    c = fgetc(file);
-                    if (c == EOF)
-                    {
-                        Token token = {SCAN_EOF, "EOF"};
-                        return token;
-                    }
-                }
-                buffer_char(c);
-                if (isdigit(c)) state = 20;
-                else state = fail(1, file);
-                break;
-
-            case 20:
-                if(isspace(c) || c == EOF)
-                {
-                    retract(1, file);
-                    Token token;
-                    token.type = T_NB;
-                    strcpy(token.lexeme, token_buffer);
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                buffer_char(c);
-                if (isdigit(c)) 
-                    state = 20;
-                else if (c == 'E') 
-                    state = 23;
-                else if (c == '.') 
-                    state = 21;
-                else 
-                    state = fail(strlen(token_buffer), file);
-                break;
-
-            case 21:
-                buffer_char(c);
-                if (isdigit(c)) state = 22;
-                else
-                    state = fail(strlen(token_buffer), file);
-                break;
-
-            case 22:
-                if(isspace(c) || c == EOF)
-                {
-                    retract(1, file);
-                    Token token;
-                    token.type = T_NB;
-                    strcpy(token.lexeme, token_buffer);
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                buffer_char(c);
-                if (isdigit(c)) state = 22;
-                else if (c == 'E') state = 23;
-                else
-                    state = fail(strlen(token_buffer), file);
-                break;
-
-            case 23:
-                buffer_char(c);
-                if (c == '+' || c == '-') 
-                    state = 24;
-                else if (isdigit(c)) 
-                    state = 25;
-                else
-                    state = fail(strlen(token_buffer), file);
-                break;
-            
-            case 24:
-                buffer_char(c);
-                if (isdigit(c)) 
-                    state = 25;
-                else
-                    state = fail(strlen(token_buffer), file);
-                break;
-
-            case 25:
-                if(isspace(c) || c == EOF)
-                {
-                    retract(1, file);
-                    Token token;
-                    strcpy(token.lexeme, token_buffer);
-                    token.type = T_NB;
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                buffer_char(c);
-                if (isdigit(c)) state = 25;
-                else
-                    state = fail(strlen(token_buffer), file);
-                break;
-
-            case 26:
-                while (isspace(c))
-                {
-                    if (c == '\n') line_n++;
-                    c = fgetc(file);
-                    if (c == EOF)
-                    {
-                        Token token = {SCAN_EOF, "EOF"};
-                        return token;
-                    }
-                }
-                buffer_char(c);
-                if (isalpha(c)) state = 27;
-                else state = fail(1, file);
-                break;
-            
-            case 27:
-                if(!isalnum(c) || c == EOF)
-                {
-                    retract(1, file);
-                    Token token;
-                    token.type = T_ID;
-                    strcpy(token.lexeme, token_buffer);
-                    state = 0;
-                    start = 0;
-                    return token;
-                }
-                buffer_char(c);
-                if (isalnum(c)) state = 27;
-                else
-                    state = fail(strlen(token_buffer), file);
-                break;
-
-            default:
-                fprintf(stderr, "\nError at line_n %d : unknown %c\n", line_n, c);
-                Token token = {T_ERR, "Error Unknown Token"};
-                state = 0;
+        case 2:
+            if (is_delim(c)) {
+                if (c != EOF) retract(1, file);
+                Token t = { T_SI, "si" };
                 start = 0;
-                return token;
-        }
-    }
+                return t;
+            } else state = fail(3, file);
+            break;
+
+        /* ------------------- ALORS (3–8) ------------------- */
+        case 3: while (isspace(c)) { c=fgetc(file); if (c=='\n') line_n++; }
+                if (c=='a') state=4; else state=fail(1,file); break;
+        case 4: if (c=='l') state=5; else state=fail(2,file); break;
+        case 5: if (c=='o') state=6; else state=fail(3,file); break;
+        case 6: if (c=='r') state=7; else state=fail(4,file); break;
+        case 7: if (c=='s') state=8; else state=fail(5,file); break;
+        case 8:
+            if (is_delim(c)) {
+                if (c != EOF) retract(1, file);
+                Token t = { T_ALORS, "alors" };
+                start = 0;
+                return t;
+            } else state = fail(6, file);
+            break;
+
+        /* ------------------- SINON (9–14) ------------------- */
+        case 9: while (isspace(c)) { c=fgetc(file); if (c=='\n') line_n++; }
+                if (c=='s') state=10; else state=fail(1,file); break;
+        case 10: if (c=='i') state=11; else state=fail(2,file); break;
+        case 11: if (c=='n') state=12; else state=fail(3,file); break;
+        case 12: if (c=='o') state=13; else state=fail(4,file); break;
+        case 13: if (c=='n') state=14; else state=fail(5,file); break;
+        case 14:
+            if (is_delim(c)) {
+                if (c != EOF) retract(1, file);
+                Token t = { T_SINON, "sinon" };
+                start = 0;
+                return t;
+            } else state = fail(6, file);
+            break;
+
+        /* ------------------- OPREL (15–18) ------------------- */
+        case 15:
+            buffer_char(c);
+            if (c == '<') state = 16;
+            else if (c == '=') state = 17;
+            else if (c == '>') state = 18;
+            else state = fail(1, file);
+            break;
+
+        case 16:
+            buffer_char(c);
+            if (c == '=' || c == '>') state = 17;
+            else if (is_delim(c)) {
+                if (c != EOF) retract(1, file);
+                Token t = { T_OPREL, "<" };
+                start = 0;
+                return t;
+            } else state = fail(2, file);
+            break;
+
+        case 18:
+            buffer_char(c);
+            if (c == '=') state = 17;
+            else if (is_delim(c)) {
+                if (c != EOF) retract(1, file);
+                Token t = { T_OPREL, ">" };
+                start = 0;
+                return t;
+            } else state = fail(2, file);
+            break;
+
+        case 17:
+            if (is_delim(c)) {
+                if (c != EOF) retract(1, file);
+                Token t;
+                t.type = T_OPREL;
+                strcpy(t.lexeme, token_buffer);
+                start = 0;
+                return t;
+            } else state = fail(strlen(token_buffer), file);
+            break;
+
+        /* ------------------- NB (19–25) ------------------- */
+        case 19:
+            while (isspace(c)) { c=fgetc(file); if (c=='\n') line_n++; }
+            buffer_char(c);
+            if (isdigit(c)) state=20;
+            else state=fail(1,file);
+            break;
+
+        case 20:
+            buffer_char(c);
+            if (isdigit(c)) state=20;
+            else if (c=='.') state=21;
+            else if (c=='E') state=23;
+            else if (is_delim(c) || !isdigit(c)) {
+                if (c!=EOF) retract(1,file);
+                Token t={T_NB,""};
+                strncpy(t.lexeme,token_buffer,strlen(token_buffer)-1);
+                start = 0;
+                return t;
+            } else state=fail(strlen(token_buffer),file);
+            break;
+
+        case 21:
+            buffer_char(c);
+            if (isdigit(c)) state=22;
+            else state=fail(strlen(token_buffer),file);
+            break;
+
+        case 22:
+            buffer_char(c);
+            if (isdigit(c)) state=22;
+            else if (c=='E') state=23;
+            else if (is_delim(c) || !isdigit(c)) {
+                if (c!=EOF) retract(1,file);
+                Token t={T_NB,""};
+                // strcpy(t.lexeme,token_buffer);
+                strncpy(t.lexeme,token_buffer,strlen(token_buffer)-1);
+
+                start = 0;
+                return t;
+            } else state=fail(strlen(token_buffer),file);
+            break;
+
+        case 23:
+            buffer_char(c);
+            if (c=='+'||c=='-') state=25;
+            else if (isdigit(c)) state=24;
+            else state=fail(strlen(token_buffer),file);
+            break;
+
+        case 24:
+            buffer_char(c);
+            if (isdigit(c)) state=24;
+            else if (is_delim(c) ) {
+                if (c!=EOF) retract(1,file);
+                Token t={T_NB,""};
+                strcpy(t.lexeme,token_buffer);
+                start = 0;
+                return t;
+            } else state=fail(strlen(token_buffer),file);
+            break;
+
+        case 25:
+            buffer_char(c);
+            if (isdigit(c)) state=25;
+            else if (is_delim(c)) {
+                if (c!=EOF) retract(1,file);
+                Token t={T_NB,""};
+                strcpy(t.lexeme,token_buffer);
+                start = 0;
+                return t;
+            } else state=fail(strlen(token_buffer),file);
+            break;
+
+        /* ------------------- ID (26–27) ------------------- */
+        case 26:
+            while (isspace(c)) { c=fgetc(file); if (c=='\n') line_n++; }
+            buffer_char(c);
+            if (isalpha(c)) state=27;
+            else state=fail(1,file);
+            break;
+
+        case 27:
+            if (is_delim(c) || !isalnum(c) ) {
+                if (c!=EOF) retract(1,file);
+                Token t={T_ID,""};
+                strcpy(t.lexeme,token_buffer);
+                start = 0;
+                return t;
+            }
+            buffer_char(c);
+            if (isalnum(c)) state=27;
+            else state=fail(strlen(token_buffer),file);
+            break;
+
+        default:
+            {
+                Token err;
+                err.type = T_ERR;
+                snprintf(err.lexeme, sizeof(err.lexeme), "Unknown word '%c' in  %d", c,line_n);
+                start = 0;
+                return err;
+            }
+        } // end switch
+        c = fgetc(file);
+
+    } // end while
 }
 
-char* create_string_copy(char* originalString)
-{
-    if (originalString == NULL) {
-        return NULL;
+
+void scan_file(FILE *file) {
+    if (!file) {
+        fprintf(stderr, "Erreur : fichier introuvable.\n");
+        exit(1);
     }
 
-    size_t length = strlen(originalString);
-    char* newString = (char*)malloc((length + 1) * sizeof(char));
+    printf("====================================\n\n");
 
-    if (newString == NULL) {
-        perror("Memory allocation failed");
-        return NULL;
+    while (1) {
+        Token t = next_token(file);
+        if (t.type == SCAN_EOF) break;
+        if (t.type == T_ERR) printf(FG_RED "Erreur :" RESET" %s\n", t.lexeme);
+        else printf("Token: %s  Lexeme: %s\n", token_names[t.type], t.lexeme);
+        if (feof(file)) break;
     }
 
-    strcpy(newString, originalString);
-    return newString;
+    printf("\n====================================\n");
 }
 
-void lexical_error(char errorStr[])
-{
-    printf(FG_RED BOLD UNDERLINE "LexicalError" FG_MAGENTA "[%d]" RESET ": " FG_MAGENTA " %s \n" RESET,
-           line_n, errorStr);
+
+
+/* ============================================================
+   MAIN PROGRAMME
+   ============================================================ */
+int main() {
+    FILE *input_file = fopen(IN_FILE_PATH, "r");
+    if (!input_file) { perror("Impossible d’ouvrir le fichier"); return 1; }
+
+    scan_file(input_file);
+    fclose(input_file);
+
+    return 0;
 }
+
