@@ -2,13 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdbool.h>
 #include "../../../include/cli_style.h"
 
 /* ============================================================
    CONFIGURATION
    ============================================================ */
-#define IN_FILE_PATH "test_program.txt"
+#define IN_FILE_PATH "test_program_.txt"
 #define MAX_LEXEME_LEN 64
 
 /* ============================================================
@@ -64,12 +63,6 @@ void buffer_char(int c) {
         token_buffer[buf_index++] = (char)c;
         token_buffer[buf_index] = '\0';
     }
-
-//     if(c == EOF) {
-//     printf("Buffered EOF character.\n");
-// }
-    
-//         printf("Buffered char: '%c', buffer now: '%s'\n", c, token_buffer);
 }
 
 void retract(int retr, FILE *file) {
@@ -93,14 +86,6 @@ int fail(int retr, FILE *in_file) {
 }
 
 int is_delim(int c) {
-    // if (c == EOF) return 1;
-    // if () return 1;
-    // switch (c) {
-        // case '(' : case ')' : case '{' : case '}' :
-        // case ';' : case ',' : case '+' : case '-' :
-        // case '*' : case '/' : case '=' : return 1;
-    //     default: return 0;
-    // }
 
     if(isspace(c) || c == EOF || c == '\n') return 1;
 
@@ -113,37 +98,26 @@ int is_delim(int c) {
 Token next_token(FILE *file) {
     if (!file) { fprintf(stderr, "Erreur : fichier introuvable.\n"); exit(1); }
 
-
-    
-    
     clear_buffer();
     int c;
     state = start;
     c = fgetc(file);
-    // Skip new lines
-    if (c == '\n') 
-    {
-        line_n++;
-    };
-    
-    // Verify if we reach EOF at the beginning
-    if (c == EOF)
-    {
-        Token token = {SCAN_EOF, "EOF"};
-        return token;
-    }
+            // Skip new lines
+        if (c == '\n') 
+        {
+            line_n++;
+        };
 
-    bool reach_eof = false;
+
 
     while (1) {
-        
-        // // Reached EOF
-        // if( c == EOF) {
-        //     reach_eof = true;
-        // }
+        // Reached EOF
+        if( c == EOF ) {
+            Token token = {SCAN_EOF, "EOF"};
+            return token;
+        }
 
-        switch (state)
-        {
+        switch (state) {
 
         /* ------------------- SI (0–2) ------------------- */
         case 0:
@@ -323,16 +297,13 @@ Token next_token(FILE *file) {
             break;
 
         case 27:
-            if (is_delim(c)) {
+            if (is_delim(c) || !isalnum(c) ) {
                 if (c!=EOF) retract(1,file);
                 Token t={T_ID,""};
                 strcpy(t.lexeme,token_buffer);
                 start = 0;
                 return t;
             }
-            // if(c == EOF)
-                printf("Delimiter '%c' found after ID '%s'\n", c, token_buffer);
-
             buffer_char(c);
             if (isalnum(c)) state=27;
             else state=fail(strlen(token_buffer),file);
@@ -347,8 +318,6 @@ Token next_token(FILE *file) {
                 return err;
             }
         } // end switch
-
-
         c = fgetc(file);
 
     } // end while

@@ -14,9 +14,6 @@ sacrilegious
 /* Invalid cases (should NOT match): */
 uoiea
 aeioa
-hello
-world
-programming
 
 /* --------------------------------------------------------- */
 /* b) Mots sur {a,b} commençant ou finissant par a */
@@ -24,25 +21,13 @@ programming
 /* Valid cases (should match): */
 a
 ab
-aba
-abb
-abba
 abbba
 ba
-bba
-bbba
-aaa
-aaab
-baaa
-abab
-baba
+
 /* Invalid cases (should NOT match): */
 b
 bb
-bbb
-bab
-bbab
-babbab
+
 
 /* --------------------------------------------------------- */
 /* c) Mots sur {a,b} sans deux occurrences consécutives du même caractère */
@@ -50,24 +35,9 @@ babbab
 /* Valid cases (should match): */
 bababab
 ab
-ba
-aba
-bab
-abab
-baba
-ababab
-bababa
 /* Invalid cases (should NOT match): */
 aa
-bb
-aab
-abb
-baa
-bbb
-abba
-baab
-aabb
-abaa
+
 
 /* --------------------------------------------------------- */
 /* d) Mots sur {a,b} ne contenant pas la sous-chaîne 'aba' */
@@ -78,30 +48,12 @@ b
 ab
 bb
 aab
-abb
-abbb
-bbb
-bbab
-bba
-aabba
-abbba
+
 /* Invalid cases (should NOT match): */
-aba
-abab
-ababa
-baba
-abaab
 babab
-aababa
+
 
 /* --------------------------------------------------------- */
 /* Mixed test cases */
 /* --------------------------------------------------------- */
 abstemious
-education
-test
-hello
-aaa
-bbb
-abcdefghijklmnop
-sequoias

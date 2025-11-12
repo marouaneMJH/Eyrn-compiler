@@ -14,7 +14,7 @@
 
 [a-zA-Z][a-zA-Z0-9]*            { printf("<id:%s>", yytext); }
 [0-9]*(\.[0-9]+)?               { printf("<num:%s>", yytext); }
-[\n\t ]+                        { printf("%s", yytext);}     /* ignorer espaces et sauts de ligne. pour le moment en lesser le pourr voir le content */
+[\n\t ]+                        { /*printf("%s", yytext);*/}     /* ignorer espaces et sauts de ligne. pour le moment en lesser le pourr voir le content */
 
 %%
 
