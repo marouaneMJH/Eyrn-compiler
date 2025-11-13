@@ -4,8 +4,11 @@ CXX = gcc
 TARGET = build/main
 PARSER_TARGET = build/parser
 
+FLEX_BASED_FOLDER =/home/ghost/dev/projects/ilisi-projecrs/eyrn-compiler/src/flex
+
 # Cherche tous les fichiers .c
 SRCS = $(shell find src -name "*.c")
+
 
 # Transforme src/foo/bar.c → build/foo/bar.o
 OBJS = $(patsubst src/%.c, build/%.o, $(SRCS))
@@ -49,7 +52,10 @@ build/%.o: src/%.c
 # Exécution scanner
 run: $(TARGET)
 	@echo "[!] Running $(TARGET)"
-	@./$(TARGET) && echo "[+] Done running" || echo "[-] Runtime error"
+	@echo
+	@echo
+	@./$(TARGET) &&   echo; echo && echo "[+] Done running" || echo "[-] Runtime error"
+	
 
 # Exécution parser  
 run_parser: $(PARSER_TARGET)
@@ -58,6 +64,12 @@ run_parser: $(PARSER_TARGET)
 
 test: clean all
 test_parser: clean parser
+
+
+flex-run:
+	@flex -o $(FLEX_BASED_FOLDER)/lex.yy.c $(FLEX_BASED_FOLDER)/ex1.l
+	@gcc $(FLEX_BASED_FOLDER)/lex.yy.c -o $(FLEX_BASED_FOLDER)/ex1 -lfl
+	@$(FLEX_BASED_FOLDER)/ex1 < $(FLEX_BASED_FOLDER)/0.dart
 
 # Nettoyage
 clean:

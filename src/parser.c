@@ -4,7 +4,7 @@
 
 const char *token_names[] = {
     "BEGIN", "END", "READ", "WRITE", "ID", "INT_LITERAL", "FLOAT_LITERAL",
-    "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_OF", "PLUS_OP", "MINUS_OP",
+    "CURLY_BRACE_OPEN", "CURLY_BRACE_CLOSE", "SCAN_EOF", "PLUS_OP", "MINUS_OP",
     "L_PAREN", "R_PAREN", "SEMICOLON", "COMMA", "ASSIGN_OP"};
 
 FILE *file_out;
@@ -22,7 +22,7 @@ void system_goal(void)
     /*<system goal> :: <program SCAN_EOF >*/
     current_token = scanner(file);
     program();
-    match(SCAN_OF);
+    match(SCAN_EOF);
 }
 
 void program(void)
@@ -36,7 +36,7 @@ void program(void)
 void inst_list(void)
 {
     /*<inst_list> ::= <inst> {<inst>} */
-    //inst();
+    // inst();
     while (true)
     {
         switch (next_token())
@@ -80,7 +80,7 @@ void inst(void)
         match(SEMICOLON);
         break;
     default:
-        syntax_error(tok);
+        syntax_error(tok,ID);
         break;
     }
 }
@@ -123,7 +123,7 @@ void add_op(void)
     if (t == PLUS_OP || t == MINUS_OP)
         match(t);
     else
-        syntax_error(t);
+        syntax_error(t,PLUS_OP);
 }
 void prim(void)
 {
@@ -149,7 +149,7 @@ void prim(void)
         match(FLOAT_LITERAL);
         break;
     default:
-        syntax_error(tok);
+        syntax_error(tok,L_PAREN);
         break;
     }
 }
@@ -167,16 +167,20 @@ void match(Token expected_token)
     }
     else
     {
-
-        // printf("Syntax Error: Expected '%s', but got '%s'\n",
-        //        token_names[expected_token], token_names[current_token]);
-        syntax_error(current_token);
+        syntax_error(current_token,expected_token);
     }
 }
 
-void syntax_error(Token token)
+void syntax_error(Token token, Token expected_token)
 {
 
-    printf(FG_RED "Syntax Error" FG_MAGENTA "[%d]" RESET ": Unexpected token '%s'\n", line_n, token_names[token]);
+    printf(FG_RED UNDERLINE BOLD "Syntax Error" FG_MAGENTA
+        "[%d]" RESET ": Unexpected token"
+        FG_CYAN "'%s' " RESET
+        "expected token " FG_CYAN
+        "'%s' \n" RESET
+        , line_n,
+        token_names[token],
+        token_names[expected_token]);
     // exit(EXIT_FAILURE);
 }

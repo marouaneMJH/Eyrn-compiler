@@ -21,7 +21,7 @@ typedef enum TokenTyped
     FLOAT_LITERAL,
     CURLY_BRACE_OPEN,
     CURLY_BRACE_CLOSE,
-    SCAN_OF,
+    SCAN_EOF,
     PLUS_OP,
     MINUS_OP,
     L_PAREN,

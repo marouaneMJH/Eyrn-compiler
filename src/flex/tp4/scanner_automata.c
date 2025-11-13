@@ -86,14 +86,6 @@ int fail(int retr, FILE *in_file) {
 }
 
 int is_delim(int c) {
-    // if (c == EOF) return 1;
-    // if () return 1;
-    // switch (c) {
-        // case '(' : case ')' : case '{' : case '}' :
-        // case ';' : case ',' : case '+' : case '-' :
-        // case '*' : case '/' : case '=' : return 1;
-    //     default: return 0;
-    // }
 
     if(isspace(c) || c == EOF || c == '\n') return 1;
 
@@ -119,8 +111,6 @@ Token next_token(FILE *file) {
 
 
     while (1) {
-
- 
         // Reached EOF
         if( c == EOF ) {
             Token token = {SCAN_EOF, "EOF"};

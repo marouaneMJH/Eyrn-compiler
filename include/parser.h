@@ -20,7 +20,7 @@ void expr_list(void);
 void add_op(void);
 void prim(void);
 void match(Token t);
-void syntax_error(Token t);
+void syntax_error(Token t, Token expected_token);
 Token next_token();
 
 #endif

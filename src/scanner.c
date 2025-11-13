@@ -9,13 +9,7 @@ int buf_index = 0;
 int line_n = 1;
 int err_char = 0;
 
-void lexical_error(char errorStr[])
 
-{
-    printf(FG_RED "LexicalError" FG_MAGENTA "[%d]" RESET ": " FG_MAGENTA " % s \n" RESET,
-           line_n,
-           errorStr);
-}
 
 void clear_buffer(void)
 {
@@ -64,7 +58,7 @@ Token scanner(FILE *file)
 
     if (feof(file))
     {
-        return SCAN_OF;
+        return SCAN_EOF;
     }
 
     while ((in_char = getc(file)) != EOF)
@@ -116,6 +110,12 @@ Token scanner(FILE *file)
                 }
             }
 
+            else if(isalpha(c))
+            {
+                ungetc(c, file);
+
+                lexical_error("Can't start ID with number");
+            }
             ungetc(c, file);
             return is_float ? FLOAT_LITERAL : INT_LITERAL;
         }
@@ -192,14 +192,20 @@ Token scanner(FILE *file)
         else if (in_char == '/')
         {
             if (getc(file) == '/')
+            {
                 for (char c = getc(file); c != EOF && c != '\n'; c = getc(file))
                     ;
+                    line_n++;
+            }
 
             else
-                {
-                    lexical_error("maybe you meant '//' for comments instead of '/'?");
-                    ungetc(in_char, file);
-                }
+            {
+
+
+                // ? attention: make sure to remove this expression cuz we dont have the '/'
+                // ungetc(in_char, file);
+                lexical_error("Maybe you meant '//' for comments instead of '/'?");
+            }
         }
 
         else
@@ -211,7 +217,7 @@ Token scanner(FILE *file)
         }
     }
     printf("EOF reached\n");
-    return SCAN_OF;
+    return SCAN_EOF;
 }
 
 void run_scanner(FILE *in_file, FILE *ou_file)
@@ -221,7 +227,7 @@ void run_scanner(FILE *in_file, FILE *ou_file)
     {
         token = scanner(in_file);
         fprintf(ou_file, "%d ", token);
-        if (token == SCAN_OF)
+        if (token == SCAN_EOF)
             break;
     }
 }

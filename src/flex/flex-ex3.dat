@@ -1,0 +1,59 @@
+/* Test file for Flex pattern matching program */
+/* ================================================== */
+
+/* --------------------------------------------------------- */
+/* a) Mots contenant les 5 voyelles a, e, i, o, u dans cet ordre */
+/* --------------------------------------------------------- */
+/* Valid cases (should match): */
+aeiou
+abstemious
+facetious
+adventitious
+sacrilegious
+
+/* Invalid cases (should NOT match): */
+uoiea
+aeioa
+
+/* --------------------------------------------------------- */
+/* b) Mots sur {a,b} commençant ou finissant par a */
+/* --------------------------------------------------------- */
+/* Valid cases (should match): */
+a
+ab
+abbba
+ba
+
+/* Invalid cases (should NOT match): */
+b
+bb
+
+
+/* --------------------------------------------------------- */
+/* c) Mots sur {a,b} sans deux occurrences consécutives du même caractère */
+/* --------------------------------------------------------- */
+/* Valid cases (should match): */
+bababab
+ab
+/* Invalid cases (should NOT match): */
+aa
+
+
+/* --------------------------------------------------------- */
+/* d) Mots sur {a,b} ne contenant pas la sous-chaîne 'aba' */
+/* --------------------------------------------------------- */
+/* Valid cases (should match): */
+a
+b
+ab
+bb
+aab
+
+/* Invalid cases (should NOT match): */
+babab
+
+
+/* --------------------------------------------------------- */
+/* Mixed test cases */
+/* --------------------------------------------------------- */
+abstemious
